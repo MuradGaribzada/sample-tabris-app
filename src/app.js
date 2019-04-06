@@ -4,7 +4,8 @@ const { Tab, TabFolder, TextView, TextInput, CheckBox, Button, CollectionView, C
 const { tasks, insertTask, getTaskById, updateTask, deleteTaskById } = require('./TaskService');
 
 let visibleTasks = [];
- 
+
+let filterModel = {  done: null };
 
 let navigationView = new NavigationView({
   left: 0, top: 0, right: 0, bottom: 0
@@ -24,7 +25,7 @@ let todoTabFolder = new TabFolder({
 
 
 let todoTab = new Tab({
-  title: 'Tasks'
+  title: 'All Tasks'
 }).appendTo(todoTabFolder);
 
 
@@ -186,6 +187,24 @@ new Button({
 }).on('select', () => newTask()).appendTo(tasksPage);
 
 
+new Button({
+  text: 'Show All',
+  left: 100
+}).on('select', () => showAll()).appendTo(tasksPage);
+
+
+new Button({
+  text: 'Show done',
+  top: 60
+}).on('select', () => showDone()).appendTo(tasksPage);
+
+
+new Button({
+  text: 'Show not done',
+  left: 100,
+  top: 60
+}).on('select', () => showNotDone()).appendTo(tasksPage);
+
 function newTask() {
   idText.text = 0;
   titleInput.text = '';
@@ -235,7 +254,22 @@ function saveTask() {
   taskModal.visible = false;
   refreshVisibleTasks();
 }
+function showDone() {
+  todoTab.title = 'Done Tasks';
+  filterModel.done = true;
+  refreshVisibleTasks();
+}
+function showNotDone() {
+  todoTab.title = 'Not Done Tasks';
+  filterModel.done = false;
+  refreshVisibleTasks();
+}
+function showAll() {
+  todoTab.title = 'All Tasks';
+  filterModel.done = null;
+  refreshVisibleTasks();
+}
 function refreshVisibleTasks() {
-  visibleTasks = tasks.slice()
+  visibleTasks = tasks.filter(x => (filterModel.done === null || x.done === filterModel.done));
   taskCollectionView.load(visibleTasks.length);
 }
