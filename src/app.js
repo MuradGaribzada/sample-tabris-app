@@ -1,11 +1,11 @@
 
-const { Tab, TabFolder, TextView, TextInput, CheckBox, Button, CollectionView, Composite, AlertDialog, NavigationView, Page, ui } = require('tabris');
+const { Tab, TabFolder, TextView, TextInput, CheckBox, Button, CollectionView, Composite, AlertDialog, NavigationView, SearchAction, Page, ui } = require('tabris');
 
 const { tasks, insertTask, getTaskById, updateTask, deleteTaskById } = require('./TaskService');
 
 let visibleTasks = [];
 
-let filterModel = {  done: null };
+let filterModel = { searchQuery: '', done: null };
 
 let navigationView = new NavigationView({
   left: 0, top: 0, right: 0, bottom: 0
@@ -14,6 +14,17 @@ let navigationView = new NavigationView({
 let tasksPage = new Page({
   title: 'ToDo List'
 }).appendTo(navigationView);
+
+
+let searchAction = new SearchAction({
+  title: 'Search',
+  image: {
+    src: device.platform === 'iOS' ? 'images/search-black-24dp@3x.png' : 'images/search-white-24dp@3x.png',
+    scale: 3
+  }
+}).on('select', ({ target }) => target.text = '')
+  .on('input', ({ text }) => setFilterQuery(text))
+  .appendTo(navigationView);
 
 
 
@@ -205,6 +216,10 @@ new Button({
   top: 60
 }).on('select', () => showNotDone()).appendTo(tasksPage);
 
+function setFilterQuery(text) {
+  filterModel.searchQuery = text.toUpperCase();
+  refreshVisibleTasks();
+}
 function newTask() {
   idText.text = 0;
   titleInput.text = '';
@@ -225,6 +240,7 @@ function deleteTask(item) {
   deleteTaskById(item.id);
   refreshVisibleTasks();
 }
+
 
 function saveTask() {
   if (titleInput.text.trim() === '') {
@@ -254,22 +270,31 @@ function saveTask() {
   taskModal.visible = false;
   refreshVisibleTasks();
 }
+
 function showDone() {
   todoTab.title = 'Done Tasks';
   filterModel.done = true;
+  resetSearchFilter();
   refreshVisibleTasks();
 }
 function showNotDone() {
   todoTab.title = 'Not Done Tasks';
   filterModel.done = false;
+  resetSearchFilter();
   refreshVisibleTasks();
 }
 function showAll() {
   todoTab.title = 'All Tasks';
   filterModel.done = null;
+  resetSearchFilter();
   refreshVisibleTasks();
 }
+function resetSearchFilter() {
+  searchAction.text = '';
+  filterModel.searchQuery = '';
+}
 function refreshVisibleTasks() {
-  visibleTasks = tasks.filter(x => (filterModel.done === null || x.done === filterModel.done));
+  visibleTasks = tasks.filter(t => (filterModel.searchQuery === '' || t.title.toUpperCase().includes(filterModel.searchQuery) || t.description.toUpperCase().includes(filterModel.searchQuery)) &&
+    (filterModel.done === null || t.done === filterModel.done));
   taskCollectionView.load(visibleTasks.length);
 }
