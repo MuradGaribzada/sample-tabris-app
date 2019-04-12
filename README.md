@@ -1,6 +1,8 @@
 # sampletabrisapp
 
 ## Run
+Simple ToDo app using Tabris.js 
+
 
 In the project directory, run the [Tabris CLI](https://www.npmjs.com/package/tabris-cli) command:
 
